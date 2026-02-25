@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.4.0">
+  <diagram name="Pagina-1" id="ZrRNOLwpwx0SzmrL67Ik">
+    <mxGraphModel dx="1042" dy="561" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Digital Twin Persona&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Copia digitale della persona: memorizza l&#39;orario per i controlli delle pillole, invia messaggi per richiedere controlli e riceve i messaggi dalle varie schede. Funziona da arbitro e da sincronizzatore&lt;/div&gt;" vertex="1">
+          <mxGeometry height="160" width="314" x="278" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Scheda 1&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Invia messaggi al Digital Twin per informare di aver preso la pillola, oppure lo&amp;nbsp; fa in risposta ad un messaggio di controllo ricevuto dallo stesso&lt;/div&gt;" vertex="1">
+          <mxGeometry height="140" width="210" x="40" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Scheda 2&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Invia messaggi al Digital Twin per informare di aver preso la pillola, oppure lo&amp;nbsp; fa in risposta ad un messaggio di controllo ricevuto dallo stesso&lt;/div&gt;" vertex="1">
+          <mxGeometry height="140" width="210" x="370" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Scheda N&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Invia messaggi al Digital Twin per informare di aver preso la pillola, oppure lo&amp;nbsp; fa in risposta ad un messaggio di controllo ricevuto dallo stesso&lt;/div&gt;" vertex="1">
+          <mxGeometry height="140" width="210" x="700" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--5" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="190" y="440" as="sourcePoint" />
+            <mxPoint x="310" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--6" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="330" y="370" as="sourcePoint" />
+            <mxPoint x="262" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="NodeRed&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Si occupa di fare da tramite tra le schede e il &quot;cervello&quot;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="110" width="210" x="330" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--8" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="414" y="230" as="sourcePoint" />
+            <mxPoint x="414" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--9" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="434.5" y="180" as="sourcePoint" />
+            <mxPoint x="434.5" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Può inviare messaggi di tipo:&lt;div&gt;connessione&lt;/div&gt;&lt;div&gt;presa&lt;/div&gt;&lt;div&gt;non presa&lt;/div&gt;&lt;div&gt;disconessione&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="170" x="100" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="Xy8YZaHPPhTphKfjuW5--11" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Può inviare messaggi di tipo:&lt;div&gt;richiesta aggiornamento&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="294" y="380" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
