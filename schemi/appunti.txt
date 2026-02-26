@@ -1,0 +1,1 @@
+QoS 1: ricezzione assicurata del messaggio

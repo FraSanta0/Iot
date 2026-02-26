@@ -1,6 +1,8 @@
 import paho.mqtt.client as mqtt
 import json
 import time
+import threading
+import schedule
 
 class PillBoxDigitalTwin:
     def __init__(self, username, key, broker="io.adafruit.com", port=1883):
@@ -29,7 +31,7 @@ class PillBoxDigitalTwin:
             print(f"[*] Connesso al Broker Adafruit come: {self.username}")
             # Iscrizione ai feed (Topic)
             # Usiamo un formato modulare per i nomi dei feed
-            client.subscribe(f"{self.username}/feeds/test") 
+            client.subscribe(f"{self.username}/feeds/digital-twin-core") 
             # client.subscribe(f"{self.username}/feeds/pill-status")
         else:
             print(f"[!] Errore di connessione, codice: {rc}")
@@ -78,7 +80,7 @@ class PillBoxDigitalTwin:
         payload = {
             "target": target_device,
             "command": command_type,
-            "value": value,
+            "val": value,
             "sender": "digital_twin_engine",
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         }
@@ -89,7 +91,39 @@ class PillBoxDigitalTwin:
         self.client.publish(topic, json.dumps(payload))
         print(f"[->] Comando inviato a {target_device}: {command_type} -> {value}")
 
+    def run_scheduler_loop(self): # Rinominata per chiarezza
+        """Il loop dello scheduler eseguito nel thread"""
+        # Cambia l'orario qui per i tuoi test
+        schedule.every().day.at("11:41").do(self.trigger_global_check)
+        
+        # Consiglio: aggiungi un controllo ogni minuto per vedere se il thread è vivo
+        # schedule.every(1).minutes.do(lambda: print("[Twin] Scheduler in esecuzione..."))
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    def trigger_global_check(self):
+        """Il cervello interroga attivamente le schede"""
+        print("[!] Ore 10:00 - Avvio controllo globale assunzione...")
+
+        # Invia il comando di controllo a tutte le schede tramite Node-RED
+        self.send_command(target_device="all", command_type="request_check", value="NOW")
+
+        # Avvia un timer di cortesia: se tra 10 min è ancora False, invia allarme
+        threading.Timer(600, self.check_if_missed).start()
+
+    def check_if_missed(self):
+        if not self.state["pill_taken"]:
+            print("[!!!] ATTENZIONE: Pillola non rilevata. Invio allarmi.")
+            self.send_command(target_device="all", command_type="alarm", value="ON")
+
     def start(self):
+        # Avvia lo scheduler in un thread dedicato
+        daemon_sched = threading.Thread(target=self.run_scheduler_loop, daemon=True)
+        daemon_sched.start()
+        print(f"[*] Thread Scheduler avviato. Ora sistema: {time.strftime('%H:%M:%S')}")
+
         """Avvia il loop di comunicazione"""
         self.client.connect(self.broker, self.port)
         self.client.loop_forever()
