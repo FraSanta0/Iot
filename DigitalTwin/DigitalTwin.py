@@ -4,6 +4,66 @@ import time
 import threading
 import schedule
 
+class PillCommands:
+    # Comandi verso le schede
+    MONDAY_CHECK = "REQ_MON"
+    TUESDAY_CHECK = "REQ_TUE"
+    WEDNESDAY_CHECK = "REQ_WED"
+    THURSDAY_CHECK = "REQ_THU"
+    FRIDAY_CHECK = "REQ_FRI"
+    SATURDAY_CHECK = "REQ_SAT"
+    SUNDAY_CHECK = "REQ_SUN"
+    DAILY_CHECK = "REQ"
+    ALARM_ON = "ALM_ON"
+    ALARM_OFF = "ALM_OFF"
+    SYNC = "SYNC_REQ"
+    
+    # Metodo per ottenere la stringa formattata
+    @staticmethod
+    def get(command_name):
+        return getattr(PillCommands, command_name.upper(), "UNKNOWN")
+    
+    @staticmethod
+    def get_command_by_day(day):
+        day = day.lower()
+        if day == "monday":
+            return PillCommands.MONDAY_CHECK
+        elif day == "tuesday":
+            return PillCommands.TUESDAY_CHECK
+        elif day == "wednesday":
+            return PillCommands.WEDNESDAY_CHECK
+        elif day == "thursday":
+            return PillCommands.THURSDAY_CHECK
+        elif day == "friday":
+            return PillCommands.FRIDAY_CHECK
+        elif day == "saturday":
+            return PillCommands.SATURDAY_CHECK
+        elif day == "sunday":
+            return PillCommands.SUNDAY_CHECK
+        else:
+            return "UNKNOWN"
+        
+    @staticmethod
+    def get_day_code(day):
+        day = day.lower()
+        if day == "monday":
+            return 0
+        elif day == "tuesday":
+            return 1
+        elif day == "wednesday":
+            return 2
+        elif day == "thursday":
+            return 3
+        elif day == "friday":
+            return 4
+        elif day == "saturday":
+            return 5
+        elif day == "sunday":
+            return 6
+        else:
+            return -1
+
+
 class PillBoxDigitalTwin:
     def __init__(self, username, key, broker="io.adafruit.com", port=1883):
         self.username = username
@@ -11,11 +71,25 @@ class PillBoxDigitalTwin:
         self.broker = broker
         self.port = port
         
+        self.week = {
+            "monday" : False,
+            "tuesday" : False,
+            "wednesday" : False,
+            "thursday" : False,
+            "friday" : False,
+            "saturday" : False,
+            "sunday" : False,
+
+        }
+
         # Stato interno del Twin (Modulare e serializzabile)
         self.state = {
             "pill_taken": False,
             "last_update": None,
-            "device_source": None
+            "device_source": None,
+            "week_status": self.week,
+            "day_of_week": None,
+            "hour_check": None
         }
 
         # Configurazione Client MQTT
@@ -94,7 +168,8 @@ class PillBoxDigitalTwin:
     def run_scheduler_loop(self): # Rinominata per chiarezza
         """Il loop dello scheduler eseguito nel thread"""
         # Cambia l'orario qui per i tuoi test
-        schedule.every().day.at("11:41").do(self.trigger_global_check)
+        self.hour_check = "12:48"
+        schedule.every().day.at(self.hour_check).do(self.trigger_global_check)
         
         # Consiglio: aggiungi un controllo ogni minuto per vedere se il thread è vivo
         # schedule.every(1).minutes.do(lambda: print("[Twin] Scheduler in esecuzione..."))
@@ -106,15 +181,16 @@ class PillBoxDigitalTwin:
     def trigger_global_check(self):
         """Il cervello interroga attivamente le schede"""
         print("[!] Ore 10:00 - Avvio controllo globale assunzione...")
+        self.day_of_week = time.strftime("%A").lower()
 
         # Invia il comando di controllo a tutte le schede tramite Node-RED
-        self.send_command(target_device="all", command_type="request_check", value="NOW")
+        self.send_command(target_device="all", command_type=PillCommands.DAILY_CHECK, value=PillCommands.get_day_code(self.day_of_week))
 
         # Avvia un timer di cortesia: se tra 10 min è ancora False, invia allarme
         threading.Timer(600, self.check_if_missed).start()
 
     def check_if_missed(self):
-        if not self.state["pill_taken"]:
+        if not self.week[self.day_of_week]:
             print("[!!!] ATTENZIONE: Pillola non rilevata. Invio allarmi.")
             self.send_command(target_device="all", command_type="alarm", value="ON")
 
@@ -122,7 +198,8 @@ class PillBoxDigitalTwin:
         # Avvia lo scheduler in un thread dedicato
         daemon_sched = threading.Thread(target=self.run_scheduler_loop, daemon=True)
         daemon_sched.start()
-        print(f"[*] Thread Scheduler avviato. Ora sistema: {time.strftime('%H:%M:%S')}")
+        self.day_of_week = time.strftime("%A").lower()
+        print(f"[*] Thread Scheduler avviato. Ora sistema: {time.strftime('%H:%M:%S')}, Giorno: {self.day_of_week}")
 
         """Avvia il loop di comunicazione"""
         self.client.connect(self.broker, self.port)
@@ -132,7 +209,7 @@ class PillBoxDigitalTwin:
 if __name__ == "__main__":
     # Inserisci qui le tue credenziali Adafruit
     ADAFRUIT_USER = "321758"
-    ADAFRUIT_KEY = "aio_Hagi76RS2bGzVtYvHgLOoAGFK5Ez"
-
+    ADAFRUIT_KEY = "mettere chiave"
+    # chiave commentata 
     twin = PillBoxDigitalTwin(ADAFRUIT_USER, ADAFRUIT_KEY)
     twin.start()
