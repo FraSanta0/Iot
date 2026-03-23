@@ -179,20 +179,40 @@ class PillBoxDigitalTwin:
             time.sleep(1)
 
     def trigger_global_check(self):
-        """Il cervello interroga attivamente le schede"""
-        print("[!] Ore 10:00 - Avvio controllo globale assunzione...")
+        """Primo tentativo di controllo (Ore 10:00)"""
+        print("[!] Avvio primo controllo globale...")
         self.day_of_week = time.strftime("%A").lower()
+        day_code = PillCommands.get_day_code(self.day_of_week)
 
-        # Invia il comando di controllo a tutte le schede tramite Node-RED
-        self.send_command(target_device="all", command_type=PillCommands.DAILY_CHECK, value=PillCommands.get_day_code(self.day_of_week))
+        # Invia il primo comando REQ
+        self.send_command(target_device="all", command_type=PillCommands.DAILY_CHECK, value=day_code)
 
-        # Avvia un timer di cortesia: se tra 10 min è ancora False, invia allarme
-        threading.Timer(600, self.check_if_missed).start()
+        # Dopo 600 secondi (10 min), esegui il secondo controllo (Last Chance)
+        threading.Timer(600, self.last_chance_check).start()
 
-    def check_if_missed(self):
-        if not self.week[self.day_of_week]:
-            print("[!!!] ATTENZIONE: Pillola non rilevata. Invio allarmi.")
+    def last_chance_check(self):
+        """Secondo tentativo prima dell'allarme"""
+        # Se nel frattempo la pillola è stata presa (tramite risposte precedenti), fermati
+        if self.state["pill_taken"]:
+            print("[OK] Pillola rilevata prima del secondo controllo. Nessuna azione necessaria.")
+            return
+
+        print("[?] Pillola non ancora presa. Invio secondo controllo di verifica...")
+        day_code = PillCommands.get_day_code(time.strftime("%A").lower())
+        
+        # Interroga di nuovo le schede
+        self.send_command(target_device="all", command_type=PillCommands.DAILY_CHECK, value=day_code)
+
+        # Aspetta altri 100 secondi, poi verifica definitivamente per l'allarme
+        threading.Timer(100, self.final_alarm_verification).start()
+
+    def final_alarm_verification(self):
+        """Verifica finale: se ancora False, l'allarme suona davvero"""
+        if not self.state["pill_taken"]:
+            print("[!!!] ATTENZIONE: Controllo fallito anche al secondo tentativo. Invio allarmi.")
             self.send_command(target_device="all", command_type="alarm", value="ON")
+        else:
+            print("[OK] Pillola rilevata al secondo controllo. Allarme annullato.")
 
     def start(self):
         # Avvia lo scheduler in un thread dedicato
