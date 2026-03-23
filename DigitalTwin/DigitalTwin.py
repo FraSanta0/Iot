@@ -14,6 +14,7 @@ class PillCommands:
     SATURDAY_CHECK = "REQ_SAT"
     SUNDAY_CHECK = "REQ_SUN"
     DAILY_CHECK = "REQ"
+    REFILL = "REF"
     ALARM_ON = "ALM_ON"
     ALARM_OFF = "ALM_OFF"
     SYNC = "SYNC_REQ"
@@ -119,7 +120,11 @@ class PillBoxDigitalTwin:
 
             # Logica di aggiornamento dello stato
             if "action" in payload and payload["action"] == "confirm_intake":
-                self.update_twin_state(True, payload.get("device"))
+                day_index = payload.get("day")
+                days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+                day_name = days[day_index]
+                self.week[day_name] = True
+                print(f"[#] Pillola del {day_name} PRESA. Stato settimana: {self.week}")
 
             if "action" in payload and payload["action"] == "connection":
                 print(f'dispositivo {msg.device} connesso')#da implementare sulla scheda
@@ -170,6 +175,9 @@ class PillBoxDigitalTwin:
         # Cambia l'orario qui per i tuoi test
         self.hour_check = "12:48"
         schedule.every().day.at(self.hour_check).do(self.trigger_global_check)
+
+        schedule.every().sunday.at("21:00").do(self.trigger_global_refill)
+        
         
         # Consiglio: aggiungi un controllo ogni minuto per vedere se il thread è vivo
         # schedule.every(1).minutes.do(lambda: print("[Twin] Scheduler in esecuzione..."))
@@ -179,12 +187,16 @@ class PillBoxDigitalTwin:
             time.sleep(1)
 
     def trigger_global_check(self):
-        """Primo tentativo di controllo (Ore 10:00)"""
         print("[!] Avvio primo controllo globale...")
         self.day_of_week = time.strftime("%A").lower()
         day_code = PillCommands.get_day_code(self.day_of_week)
 
-        # Invia il primo comando REQ
+        if self.week[self.day_of_week]:
+            print(f"[OK] Pillola di {self.day_of_week} già risultante come PRESA. Salto il check.")
+            return
+
+        print(f"[!] Avvio controllo per: {self.day_of_week}")
+        day_code = PillCommands.get_day_code(self.day_of_week)
         self.send_command(target_device="all", command_type=PillCommands.DAILY_CHECK, value=day_code)
 
         # Dopo 600 secondi (10 min), esegui il secondo controllo (Last Chance)
@@ -192,13 +204,13 @@ class PillBoxDigitalTwin:
 
     def last_chance_check(self):
         """Secondo tentativo prima dell'allarme"""
+        day_code = PillCommands.get_day_code(self.day_of_week)
+
         # Se nel frattempo la pillola è stata presa (tramite risposte precedenti), fermati
-        if self.state["pill_taken"]:
+        if self.week[self.day_of_week]:
             print("[OK] Pillola rilevata prima del secondo controllo. Nessuna azione necessaria.")
             return
-
         print("[?] Pillola non ancora presa. Invio secondo controllo di verifica...")
-        day_code = PillCommands.get_day_code(time.strftime("%A").lower())
         
         # Interroga di nuovo le schede
         self.send_command(target_device="all", command_type=PillCommands.DAILY_CHECK, value=day_code)
@@ -208,11 +220,32 @@ class PillBoxDigitalTwin:
 
     def final_alarm_verification(self):
         """Verifica finale: se ancora False, l'allarme suona davvero"""
-        if not self.state["pill_taken"]:
+        if not self.week[self.day_of_week]:
             print("[!!!] ATTENZIONE: Controllo fallito anche al secondo tentativo. Invio allarmi.")
             self.send_command(target_device="all", command_type="alarm", value="ON")
         else:
             print("[OK] Pillola rilevata al secondo controllo. Allarme annullato.")
+
+    def trigger_global_refill(self):
+        print("[!] Invio comando di refill globale...")
+        self.day_of_week = time.strftime("%A").lower()
+        day_code = PillCommands.get_day_code(self.day_of_week)
+
+        # Invia il primo comando REQ
+        self.send_command(target_device="all", command_type=PillCommands.REFILL, value=-1) #VALUE DA RIVEDERE
+
+        # Dopo 600 secondi (10 min), esegui il secondo controllo (Last Chance)
+        threading.Timer(600, self.last_chance_check).start()
+
+    def refill_verification(self):
+        full = all(status == False for status in self.week.values())
+
+        if not full:
+            giorni_vuoti = [d for d, s in self.week.items() if s == True]
+            print(f"[!!!] Errore Refill: i vani di {giorni_vuoti} risultano ancora vuoti!")
+            self.send_command(target_device="all", command_type="alarm", value="ON")
+        else:
+            print("[OK] Refill avvenuto con successo.")
 
     def start(self):
         # Avvia lo scheduler in un thread dedicato
