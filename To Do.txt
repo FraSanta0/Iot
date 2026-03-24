@@ -1,0 +1,8 @@
+FRA:
+-unione delle due versioni di DigitalTwin.py
+-gestione di schede multiple su DigitalTwin.py
+-aggiunta parte di progetto su smartphone
+-cominciare schemi
+MATTE:
+-finire parte fotoresistore
+-reset del motore

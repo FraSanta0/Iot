@@ -3,6 +3,8 @@ import json
 import time
 import threading
 import schedule
+import sys
+import os
 
 class PillCommands:
     # Comandi verso le schede
@@ -166,7 +168,7 @@ class PillBoxDigitalTwin:
     def run_scheduler_loop(self): # Rinominata per chiarezza
         """Il loop dello scheduler eseguito nel thread"""
         # Cambia l'orario qui per i tuoi test
-        self.hour_check = "12:41"
+        self.hour_check = "12:47"
         schedule.every().day.at(self.hour_check).do(self.trigger_global_check)
 
         schedule.every().sunday.at("21:00").do(self.trigger_global_refill)
@@ -250,12 +252,31 @@ class PillBoxDigitalTwin:
         """Avvia il loop di comunicazione"""
         self.client.connect(self.broker, self.port)
         self.client.loop_forever()
+        
+def main():
+    try:
+        ADAFRUIT_USER = os.environ.get("ADA_USERNAME")
+        ADAFRUIT_KEY = os.environ.get("ADA_KEY")
+        sys.stdout = open("/home/admin/digitaltwin/twin.log", "a", buffering=1)  # line-buffered
+        sys.stderr = open("/home/admin/digitaltwin/twin.err", "a", buffering=1)
+        twin = PillBoxDigitalTwin(ADAFRUIT_USER, ADAFRUIT_KEY)
+        twin.start()
+    except KeyboardInterrupt:
+        print("Arresto del digital twin...")
 
-# --- ESEMPIO DI UTILIZZO ---
 if __name__ == "__main__":
-    # Inserisci qui le tue credenziali Adafruit
-    ADAFRUIT_USER = "321758"
-    ADAFRUIT_KEY = "mettere chiave"
-    # chiave commentata 
-    twin = PillBoxDigitalTwin(ADAFRUIT_USER, ADAFRUIT_KEY)
-    twin.start()
+    main()
+
+
+# --- MAIN VECCHIO ---
+# if __name__ == "__main__":
+#     # Inserisci qui le tue credenziali Adafruit
+#     ADAFRUIT_USER = "321758"
+#     ADAFRUIT_KEY = ""
+#     twin = PillBoxDigitalTwin(ADAFRUIT_USER, ADAFRUIT_KEY)
+#     twin.start()
+
+    #t3DfLKbJ9Ipohk6RxoKfF
+    #questa non è la chiave
+    #aio_FPwq82d
+    
