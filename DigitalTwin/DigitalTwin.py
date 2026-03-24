@@ -6,13 +6,6 @@ import schedule
 
 class PillCommands:
     # Comandi verso le schede
-    MONDAY_CHECK = "REQ_MON"
-    TUESDAY_CHECK = "REQ_TUE"
-    WEDNESDAY_CHECK = "REQ_WED"
-    THURSDAY_CHECK = "REQ_THU"
-    FRIDAY_CHECK = "REQ_FRI"
-    SATURDAY_CHECK = "REQ_SAT"
-    SUNDAY_CHECK = "REQ_SUN"
     DAILY_CHECK = "REQ"
     REFILL = "REF"
     ALARM_ON = "ALM_ON"
@@ -173,7 +166,7 @@ class PillBoxDigitalTwin:
     def run_scheduler_loop(self): # Rinominata per chiarezza
         """Il loop dello scheduler eseguito nel thread"""
         # Cambia l'orario qui per i tuoi test
-        self.hour_check = "12:48"
+        self.hour_check = "12:41"
         schedule.every().day.at(self.hour_check).do(self.trigger_global_check)
 
         schedule.every().sunday.at("21:00").do(self.trigger_global_refill)
